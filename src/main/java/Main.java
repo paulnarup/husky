@@ -1,82 +1,44 @@
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-import org.apache.poi.ss.usermodel.*;
-
-import java.io.File;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.json.JSONObject;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 
 public class Main {
-    public static final String studentInfoFile = "Student Info.xlsx";
-    public static final String testRetakeFile = "Test Retake Scores.xlsx";
-    public static final String testScores = "Test Scores.xlsx";
-    public static ArrayList<Student> students = new ArrayList<Student>();
-    public static double averageScore;
-
-    public static void createStudents()throws  IOException{
-        Workbook workbook = WorkbookFactory.create(new File(studentInfoFile));//open excel file
-        Sheet sheet = workbook.getSheetAt(0);
-        for(Row row: sheet){//get values from each row
-            if(row.getRowNum() ==0){
-                continue;
-            }
-            int id = (int) row.getCell(0).getNumericCellValue();
-            String major = row.getCell(1).getStringCellValue();
-            char gender = row.getCell(2).getStringCellValue().charAt(0);
-            Student student = new Student();
-            student.setStudentID(id);
-            student.setMajor(major);
-            student.setGender(gender);
-            students.add(student);
-        }
-    }
-
-    public static void setGrades(String file,boolean retake)throws IOException{
-        Workbook workbook = WorkbookFactory.create(new File(file));//open excel file
-        Sheet sheet = workbook.getSheetAt(0);
-
-        for(Row row: sheet) {//get values from each row
-            if (row.getRowNum() == 0) {
-                continue;
-            }
-            int id = (int) row.getCell(0).getNumericCellValue();
-            double score = row.getCell(1).getNumericCellValue();
-            for(Student student: students){
-                if (student.getStudentID() == id){
-                    if(retake){
-                        student.setRetakeScore(score);
-                    }else {
-                        student.setTestScore(score);
-                    }
-                }
-            }
-        }
-        workbook.close();
-
-    }
-
+    private static final String testRetakeFile = "Test Retake Scores.xlsx";
+    private static final String testScores = "Test Scores.xlsx";
+    private static CloseableHttpClient httpClient = HttpClientBuilder.create().build();
 
     public static void main(String[] args)throws IOException{
-        ArrayList<Integer> femaleCompSciList = new ArrayList<Integer>();
-        createStudents();
-        setGrades(testScores,false);
-        setGrades(testRetakeFile,true);
+        ExcelHandler excelHandler = new ExcelHandler();
+        excelHandler.createStudents();//create student objects for student list
+        excelHandler.setGrades(testScores,false);//set grades for the students
+        excelHandler.setGrades(testRetakeFile,true);
 
-        for(Student s :students){
-            s.calcFinalScore();
-            if(s.getGender() == 'F' && s.getMajor().equalsIgnoreCase("computer science")){
-                femaleCompSciList.add(s.getStudentID());
+        JSONObject obj = new JSONObject();
+        obj.put("id","pnarup@luc.edu");
+        obj.put("name","Paul Narup");
+        obj.put("average",excelHandler.calcFinalAverage());
+        obj.put("studentIds",excelHandler.getFemaleCompArrayStringSorted());
+        System.out.println(obj);
+        try {
+            HttpPost request = new HttpPost("http://3.86.140.38:5000/challenge");
+            StringEntity jsonToString = new StringEntity(obj.toString());
+            request.addHeader("content-type","application/json");
+            request.setEntity(jsonToString);
+            HttpResponse response = httpClient.execute(request);
+            int code = response.getStatusLine().getStatusCode();
+            if(code == 200){
+                System.out.println("Code " + code + ": Http post request successful");
+            }else {
+                System.out.println("Code " + code + ": Http post request not successful");
             }
-            System.out.println(s.toString());
-            averageScore += s.getFinalScore();
+        }catch (Exception ex){
+            System.out.println("Error occurred during post request");
+        }finally {
+            httpClient.close();
         }
-        System.out.println(femaleCompSciList.toString());
-        Collections.sort(femaleCompSciList);
-        System.out.println(femaleCompSciList.toString());
-
-        averageScore = averageScore/students.size();
-        int finalAverageScore = (int) Math.round(averageScore);
-        System.out.println(averageScore);
-        System.out.println(finalAverageScore);
     }
 }

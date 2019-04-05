@@ -1,5 +1,3 @@
-import org.apache.commons.math3.analysis.function.Max;
-
 public class Student {
     private int studentID;
     private String major;
@@ -8,9 +6,10 @@ public class Student {
     private Double finalScore;
     private char gender;
 
-    public Student(){
+    Student(){
 
     }
+
 
     public String toString(){
         String s = "ID: " + studentID + " Major: " + major + " Gender: " + gender + " First Test: " + testScore + " Retake: "
@@ -18,55 +17,55 @@ public class Student {
         return s;
     }
 
-    public int getStudentID() {
+    int getStudentID() {
         return studentID;
     }
 
-    public void setStudentID(int studentID) {
+    void setStudentID(int studentID) {
         this.studentID = studentID;
     }
 
-    public String getMajor() {
+    String getMajor() {
         return major;
     }
 
-    public void setMajor(String major) {
+    void setMajor(String major) {
         this.major = major;
     }
 
-    public double getTestScore() {
+    double getTestScore() {
         return testScore;
     }
 
-    public void setTestScore(double testScore) {
+    void setTestScore(double testScore) {
         this.testScore = testScore;
     }
 
-    public double getRetakeScore() {
+    double getRetakeScore() {
         return retakeScore;
     }
 
-    public void setRetakeScore(double retakeScore) {
+    void setRetakeScore(double retakeScore) {
         this.retakeScore = retakeScore;
     }
 
-    public double getFinalScore() {
+    double getFinalScore() {
         return finalScore;
     }
 
-    public void setFinalScore(double finalScore) {
+    void setFinalScore(double finalScore) {
         this.finalScore = finalScore;
     }
 
-    public char getGender() {
+    char getGender() {
         return gender;
     }
 
-    public void setGender(char gender) {
+    void setGender(char gender) {
         this.gender = gender;
     }
 
-    public void calcFinalScore(){
+    void calcFinalScore(){//final = higher between first test and retake
         if(retakeScore == null){
             finalScore = testScore;
         }else{
